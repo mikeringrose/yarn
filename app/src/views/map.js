@@ -20,8 +20,10 @@
 		 */
 		initialize: function(options) {
 			this.proj = options.proj;
-			this.layer = new yarn.views.TileLayer({ model: this.model, 
-				proj: this.proj });
+			this.layer = new yarn.views.TileLayer({ 
+				model: this.model, 
+				proj: this.proj
+			});
 		},
 
 		/**
