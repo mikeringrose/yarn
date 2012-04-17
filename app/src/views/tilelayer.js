@@ -28,9 +28,6 @@
          */
         render: function() {
             var model = this.model,
-                zoom = model.get('zoom'),
-                tileSize = model.get('tileSize'),
-                dimensions = model.get('dimensions'),
                 centerPoint = this._calculateCenterPoint(),
                 centertPixelPoint = this._calculateCenterPixelPoint(centerPoint);
 
