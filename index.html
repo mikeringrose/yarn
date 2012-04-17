@@ -1,0 +1,48 @@
+<html>
+<head>
+    <title>Example Map</title>
+    <style type="text/css">
+        #map {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript" src="app/lib/underscore-min.js"></script>
+    <script type="text/javascript" src="app/lib/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="app/lib/backbone-min.js"></script>
+
+    <script type="text/javascript" src="app/src/yarn.js"></script>
+    <script type="text/javascript" src="app/src/core/core.js"></script> 
+    <script type="text/javascript" src="app/src/core/map.js"></script>  
+    <script type="text/javascript" src="app/src/core/point.js"></script>
+    <script type="text/javascript" src="app/src/core/latlng.js"></script>
+    <script type="text/javascript" src="app/src/core/sphericalmercator.js"></script>
+    <script type="text/javascript" src="app/src/models/models.js"></script>
+    <script type="text/javascript" src="app/src/models/map.js"></script>    
+    <script type="text/javascript" src="app/src/views/views.js"></script>   
+    <script type="text/javascript" src="app/src/views/map.js"></script> 
+    <script type="text/javascript" src="app/src/views/tilelayer.js"></script>
+    <script type="text/javascript" src="app/src/views/tile.js"></script>    
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            var mapEl = document.getElementById('map'),
+                center = new yarn.core.LatLng(40.039722, -76.304444),
+                // center = new yarn.core.LatLng(60, -130),
+                options = {
+                    el: mapEl,
+                    center: center,
+                    zoom: 12,
+                    tileSize: 256
+                },
+                map = new yarn.core.Map(options);
+        });
+    </script>
+</head>
+<body>
+    <div id="map">
+
+    </div>
+</body>
+</html>
