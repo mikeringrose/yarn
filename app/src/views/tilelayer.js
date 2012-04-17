@@ -14,12 +14,12 @@
          */
         initialize: function(options) {
             var self = this;
-            this.tiles = [];
-            this.proj = options.proj;
+            self.tiles = [];
+            self.proj = options.proj;
 
-            _.bindAll(this, [ 'render' ]);
+            _.bindAll(self, [ 'render' ]);
 
-            this.model.on('change:zoom change:center change:dimensions', this.render);
+            self.model.on('change:zoom change:center change:dimensions', self.render);
         },
 
         /**
