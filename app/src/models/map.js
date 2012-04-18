@@ -26,7 +26,19 @@
 			 * Default our projection to spherical mercator.
 			 * @type {String}
 			 */
-			projection: 'spherical mercator'
+			projection: 'spherical mercator',
+
+			/**
+			 * Max zoom level.
+			 * @type {Number}
+			 */
+			minZoom: 1,
+
+			/**
+			 * Minimum zoom level.
+			 * @type {Number}
+			 */
+			maxZoom: 18
 
 		}
 
