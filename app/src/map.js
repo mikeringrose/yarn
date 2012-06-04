@@ -1,28 +1,30 @@
-yarn.core.Map = function() {
+yarn.Map = function() {
 
     /**
      * Our core map options.
      * @param {Object} options TODO: MR add all of the options.
      *                         el: {String, Element} 
-     *                         center: {yarn.core.LatLng}
+     *                         center: {yarn.LatLng}
      *                         zoom: {Number} 
      */
     function Map(options) {
-        var proj = options.proj || new yarn.core.SphericalMercator(),
-            width = options.el.clientWidth,
-            height = options.el.clientHeight;
+        var width = options.el.clientWidth,
+            height = options.el.clientHeight,
+            projection = y.proj.Projection.get(options.projection || 'spherical mercator');
 
         this.model = new yarn.models.Map({
             tileSize: options.tileSize,
             zoom: options.zoom,
             center: options.center,
-            dimensions: { width: width, height: height }
+            projection: projection,
+            dimensions: { width: width, height: height },
+            width: width,
+            height: height
         });
 
         this.view = new yarn.views.Map({
             el: options.el,
-            model: this.model,
-            proj: proj 
+            model: this.model
         });
 
         this.view.render();
@@ -64,8 +66,8 @@ yarn.core.Map = function() {
 
         /**
          * Pan's tye map to the supplied lattitude/longitude.
-         * @param  {yarn.core.LatLng} latlng    new map
-         * @return {Object}                     *this*
+         * @param  {yarn.LatLng} latlng     new map
+         * @return {Object}                 *this*
          */
         setCenter: function(latlng) {
             this.model.set({'center':latlng});

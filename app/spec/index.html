@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+
+    <script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/qunit/git/qunit.css" type="text/css" media="screen">
+    <script type="text/javascript" src="http://code.jquery.com/qunit/git/qunit.js"></script>
+    <script type="text/javascript" src="./src/yarn.js"></script>
+    <script type="text/javascript" src="./src/core.js"></script>
+    <script type="text/javascript" src="./src/point.js"></script>
+    <script type="text/javascript" src="./src/latlng.js"></script>
+    <script type="text/javascript" src="./src/sphericalmercator.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        test("Test project (0.0, 0.0)", function() {
+          var sm = new yarn.SphericalMercator(),
+              latlng = new yarn.LatLng(0, 0),
+              point = sm.project(latlng);
+
+          equal( point.x, 0, "Lat should be 0." );
+          equal( point.y, 0, "Lng should be 0." );
+        });
+
+        test("Test unproject (60.0, -130.0)", function() {
+          var sm = new yarn.SphericalMercator(),
+              latlng1 = new yarn.LatLng(40.039722, -76.304444),
+              point = sm.project(latlng1),
+              latlng2 = sm.unproject(point);
+
+          ok( Math.abs( latlng1.lat - latlng2.lat ) < .000005, "Unprojected should lat equal original." );
+          ok( Math.abs( latlng1.lng - latlng2.lng ) < .000005, "Unprojected should lng equal original." );
+        });
+      });      
+    </script>
+    <title></title>
+  </head>
+  <body>
+    <h1 id="qunit-header">
+      QUnit example
+    </h1>
+    <h2 id="qunit-banner"></h2>
+    <div id="qunit-testrunner-toolbar"></div>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+    <div id="qunit-fixture">
+      test markup, will be hidden
+    </div>
+  </body>
+</html>

@@ -11,6 +11,9 @@
 		 * @type {Object}
 		 */
 		events: {
+			'mousedown': 'dragStart',
+			'mousemove': 'drag',
+			'mouseup' : 'dragEnd'
 		},
 
 		/**
@@ -19,10 +22,8 @@
 		 * @return {void}         
 		 */
 		initialize: function(options) {
-			this.proj = options.proj;
 			this.layer = new yarn.views.TileLayer({ 
-				model: this.model, 
-				proj: this.proj
+				model: this.model
 			});
 		},
 
@@ -32,6 +33,25 @@
 		 */
 		render: function() {
 			this.el.appendChild(this.layer.render().el);
+		},
+
+		dragStart: function(event) {
+			this.dragPoint = new yarn.Point(event.clientX, event.clientY);
+		},
+
+		dragEnd: function(event) {
+			this.dragPoint = null;
+		},
+
+		drag: function(event) {
+			if (!this.dragPoint) return;
+
+			var prevPoint = this.dragPoint,
+				currPoint = new yarn.Point(event.clientX, event.clientY),
+				difference = currPoint.subtract(prevPoint),
+				pos = this.$el.offset();
+
+			this.dragPoint = currPoint;
 		}
 
 	});

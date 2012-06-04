@@ -1,8 +1,9 @@
 (function() {
 
-    var PTILE = function() {
+    var IMG = function() {
         var imageEl = document.createElement('img');
         imageEl.style.position = 'absolute';
+        imageEl.draggable = false;
 
         return imageEl;
     }();
@@ -37,7 +38,7 @@
          * @return {Tile} this Tile
          */
         render: function() {
-            var el = PTILE.cloneNode();
+            var el = IMG.cloneNode(false);
             el.src = this.src;
             el.style.top = this.top + 'px';
             el.style.left = this.left + 'px';            
