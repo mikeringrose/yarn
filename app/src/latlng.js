@@ -1,4 +1,4 @@
-yarn.LatLng = function() {
+yarn.LatLng = (function() {
 	
 	function LatLng(lat, lng) {
 		this.lat = lat;
@@ -7,4 +7,4 @@ yarn.LatLng = function() {
 
 	return LatLng;
 
-}();
+}());

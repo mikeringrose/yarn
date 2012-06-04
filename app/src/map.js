@@ -1,4 +1,4 @@
-yarn.Map = function() {
+yarn.Map = (function() {
 
     /**
      * Our core map options.
@@ -78,4 +78,4 @@ yarn.Map = function() {
 
     return Map;
 
-}();
+}());

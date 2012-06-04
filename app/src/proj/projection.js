@@ -7,7 +7,7 @@ yarn.proj = {};
 /**
  * Our projection factory.
  */
-yarn.proj.Projection = function() {
+yarn.proj.Projection = (function() {
 
 	return {
 		get: function(name) {
@@ -21,4 +21,4 @@ yarn.proj.Projection = function() {
 		}
 	};
 
-}();
+}());

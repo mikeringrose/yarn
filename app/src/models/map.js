@@ -106,8 +106,8 @@
                 bottom: projCenter.y - centerY,
                 //- need i say, this is junk, a whole lot of junk
                 transform: function(point) {
-                    px = ( point.x + 20037508.34 ) / resolution,
-                    py = ( -point.y + 20037508.34 ) / resolution;
+                    var px = ( point.x + 20037508.34 ) / resolution,
+                        py = ( -point.y + 20037508.34 ) / resolution;
 
                     return new yarn.Point(px, py);
                 }
@@ -116,4 +116,4 @@
 
     });
 
-})();
+}());
