@@ -11,9 +11,6 @@
          * @type {Object}
          */
         events: {
-            'mousedown': 'dragStart',
-            'mousemove': 'drag',
-            'mouseup' : 'dragEnd'
         },
 
         /**
