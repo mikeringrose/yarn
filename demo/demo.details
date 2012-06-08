@@ -1,0 +1,9 @@
+---
+ name: The Name of the Demo
+ description: Some description, please keep it in one line
+ authors:
+   - Mike Ringrose
+ resources:
+   - https://raw.github.com/mikeringrose/yarn/master/dist/yarn.js
+ normalize_css: no
+ ---
