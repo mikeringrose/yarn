@@ -1,1 +1,2 @@
-var y = yarn = {};
+var yarn = {},
+    y = yarn;

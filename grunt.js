@@ -29,6 +29,8 @@ module.exports = function(grunt) {
               'app/src/models/models.js',
               'app/src/models/viewport.js',
               'app/src/models/map.js',
+              'app/src/views/clickable.js',
+              'app/src/views/draggable.js',
               'app/src/views/views.js',
               'app/src/views/map.js',
               'app/src/views/tilelayer.js',
@@ -66,6 +68,7 @@ module.exports = function(grunt) {
         yarn: true,
         y: true,
         _: true,
+        $: true,
         Backbone: true
       }
     },

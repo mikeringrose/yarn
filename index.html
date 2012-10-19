@@ -4,14 +4,15 @@
     <style type="text/css">
         #map {
             position: relative;
-            width: 800px;
-            height: 600px;
+            width: 1024px;
+            height: 768px;
             overflow: hidden;
         }
     </style>
     <script type="text/javascript" src="app/lib/underscore-min.js"></script>
     <script type="text/javascript" src="app/lib/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="app/lib/backbone-min.js"></script>
+    <script type="text/javascript" src="app/lib/cocktail.js"></script>
 
     <script type="text/javascript" src="dist/yarn.js"></script>
 
@@ -26,12 +27,13 @@
                 options = {
                     el: mapEl,
                     center: center,
-                    zoom: 16,
+                    zoom: 10,
                     tileSize: 256
                 },
                 map = new yarn.Map(options);
 
-                setTimeout(function() { map.setZoom(8); }, 1500);
+                // setTimeout(function() { map.setZoom(8); }, 1500);
+                // setInterval(function() { lng += .05; map.setCenter(new yarn.LatLng(lat, lng)); }, 3000);
         });
     </script>
 </head>

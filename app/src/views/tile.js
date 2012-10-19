@@ -1,12 +1,11 @@
 (function() {
-
-    var IMG = function() {
+    var IMG = (function() {
         var imageEl = document.createElement('img');
         imageEl.style.position = 'absolute';
         imageEl.draggable = false;
 
         return imageEl;
-    }();
+    }());
 
     yarn.views.Tile = Backbone.View.extend({
 
@@ -17,8 +16,7 @@
          */
         initialize: function(options) {
             this.src = options.src;
-            this.top = options.top;
-            this.left = options.left;
+            this.topLeft = options.topLeft;
         },
 
         /**
@@ -40,14 +38,20 @@
         render: function() {
             var el = IMG.cloneNode(false);
             el.src = this.src;
-            el.style.top = this.top + 'px';
-            el.style.left = this.left + 'px';            
+            el.style.top = this.topLeft.y + 'px';
+            el.style.left = this.topLeft.x + 'px';            
 
             this.el = el;
 
             return this;
+        },
+
+        update: function(top, left) {
+            var el = this.el;
+            el.style.top = this.top + 'px';
+            el.style.left = this.left + 'px';
         }
 
     });
 
-})();
+}());

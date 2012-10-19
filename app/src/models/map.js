@@ -76,12 +76,36 @@
             });
 
             self.on('change:center', function(model, center) {
-
+                this.updateViewport(model, center);
             });
         },
 
-        updateViewport: function(model, center) {
+        zoomIn: function() {
+            var zoom = this.get('zoom'),
+                maxZoom = this.get('maxZoom');
 
+            zoom += 1;
+
+            if (zoom < maxZoom) {
+                this.set({'zoom': zoom});
+            }
+        },
+
+        /**
+         * Updates the current viewport with the new bounds.
+         * @param  {Backbone.Model} model   map model
+         * @param  {yarn.LatLng}    center  new center latlng for the map
+         * @return {void}                   
+         */
+        updateViewport: function(model, center) {
+            var viewport = this.get('viewport'),
+                projectedCenter = this.project(center),
+                halfedCenter = this.getHalfDimensionsMercator(); 
+
+            viewport.set({
+                topLeft: new yarn.Point(projectedCenter.x - halfedCenter.x, projectedCenter.y + halfedCenter.y),
+                bottomRight: new yarn.Point(projectedCenter.x + halfedCenter.x, projectedCenter.y - halfedCenter.y)
+            });   
         },
 
         /**
@@ -92,18 +116,14 @@
          */
         calculateViewport: function(model, zoom) {
             var center = model.get('center'),
-                proj = model.get('projection'),
-                tileSize = model.get('tileSize'), 
-                projCenter = proj.project(center),
-                resolution = proj.getResolution(zoom, tileSize),
-                centerX = model.get('width') / 2 * resolution,               
-                centerY = model.get('height') / 2 * resolution;
-
+                resolution = this.getResolution(model),
+                projectedCenter = this.project(center),
+                halfedCenter = this.getHalfDimensionsMercator(); 
+                
             return new yarn.models.Viewport({
-                top: projCenter.y + centerY,
-                left: projCenter.x - centerX,
-                right: projCenter.x + centerX,
-                bottom: projCenter.y - centerY,
+                topLeft: new yarn.Point(projectedCenter.x - halfedCenter.x, projectedCenter.y + halfedCenter.y),
+                bottomRight: new yarn.Point(projectedCenter.x + halfedCenter.x, projectedCenter.y - halfedCenter.y),
+
                 //- need i say, this is junk, a whole lot of junk
                 transform: function(point) {
                     var px = ( point.x + 20037508.34 ) / resolution,
@@ -112,6 +132,78 @@
                     return new yarn.Point(px, py);
                 }
             });
+        },
+
+        moveByPixels: function(offset) {
+            var center = this.get('center'),
+                offsetProjected = this.reverse(offset),
+                centerProjected = this.project(center).subtract(offsetProjected);
+
+            this.set({ 'center': this.unproject(centerProjected) });
+        },
+
+        getProjection: function() {
+            return this.get('projection');
+        },
+
+        /**
+         * Returns the resolution for the state of the current model.
+         * @param  {Backbone.Model} model   *this*
+         * @return {Number}                 map resolution for the current map state
+         */
+        getResolution: function(model) {
+            var zoom = model.get('zoom'),
+                tileSize = model.get('tileSize'),
+                projection = model.get('projection');
+
+            return projection.getResolution(zoom, tileSize);
+        },
+
+        /**
+         * Returns the dimensions of this map halfed and scaled to projected values.
+         * @return {yarn.Point} 
+         */
+        getHalfDimensionsMercator: function() {
+            var projection = this.get('projection'),
+                transformer = projection.getTransformer(this.get('zoom'), this.get('tileSize')),
+                point = new yarn.Point(this.get('width'), this.get('height')).divide(2);
+
+            return transformer.reverse(point);
+        },
+
+        /**
+         * Returns the projected center for this model.
+         * @param  {Backbone.Model} model   a map model
+         * @param  {yarn.LatLng}    center  center latlng
+         * @return {yarn.Point}             projected point in mercator miles
+         */
+        project: function(latLng) {
+            var projection = this.get('projection');
+            return projection.project(latLng);
+        },
+
+        unproject: function(point) {
+            var projection = this.get('projection');
+            return projection.unproject(point);
+        },
+
+        transformLatLngToPixels: function(latLng) {
+            var projection = this.getProjection(),
+                transformer = projection.getTransformer(this.get('zoom'), this.get('tileSize')),
+                projected = projection.project(latLng);
+
+            return transformer.forward(projected);
+        },
+
+        /**
+         * Reverses a pixels into projected space.
+         * @param  {yarn.Point}     point   to reverse
+         * @return {yarn.Point}             point in projected space
+         */
+        reverse: function(point) {
+            var projection = this.get('projection'),
+                transformer = projection.getTransformer(this.get('zoom'), this.get('tileSize'));
+            return transformer.reverse(point);
         }
 
     });

@@ -1,9 +1,10 @@
-/*! PROJECT_NAME - v0.1.0 - 2012-06-04
+/*! PROJECT_NAME - v0.1.0 - 2012-10-17
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2012 Mike Ringrose; Licensed MIT */
 
-var y = yarn = {};
-yarn.LatLng = function() {
+var yarn = {},
+    y = yarn;
+yarn.LatLng = (function() {
 	
 	function LatLng(lat, lng) {
 		this.lat = lat;
@@ -12,35 +13,66 @@ yarn.LatLng = function() {
 
 	return LatLng;
 
-}();
+}());
 
 /**
  * Simple point object.
  */
-yarn.Point = function() {
-	
-	function Point(x, y) {
-		this.x = x;
-		this.y = y;
-	}
+yarn.Point = (function() {
+    
+    function Point(x, y) {
+        this.x = x;
+        this.y = y;
+    }
 
-	Point.prototype = {
+    Point.prototype = {
 
-		/**
-		 * Non-destructive subtract operation that returns a new point.
-		 * @param  {yarn.Point} 	other 	point to subtract
-		 * @return {yarn.Point}       		the resulting point
-		 */
-		subtract: function(other) {
-			return new Point(this.x - other.x, this.y - other.y);
-		}
+        /**
+         * Non-destructive add operation.
+         * @param {yarn.Point}  other       point
+         * @return {yarn.Poin}  resulting   point object
+         */
+        add: function(other) {
+            return new Point(this.x + other.x, this.y + other.y);
+        },
 
-	};
+        /**
+         * Non-destructive subtract operation that returns a new point.
+         * @param  {yarn.Point}     other   point to subtract
+         * @return {yarn.Point}             the resulting point
+         */
+        subtract: function(other) {
+            return new Point(this.x - other.x, this.y - other.y);
+        },
 
-	return Point;
+        /**
+         * Non-destructive scalar multiply.
+         * @param  {Number}     scalar  to multiply both points by.
+         * @return {yarn.Point}         the resulting point
+         */
+        multiply: function(scalar) {
+            return new Point(this.x * scalar, this.y * scalar);
+        },
 
-}();
-yarn.Map = function() {
+        /**
+         * Non-destructive division.
+         * @param  {Number}     scalar  to divide by
+         * @return {yarn.Point}         results of the division
+         */
+        divide: function(scalar) {
+            return new Point(this.x / scalar, this.y / scalar);
+        },
+
+        floor: function() {
+            return new Point(Math.floor(this.x), Math.floor(this.y));
+        }
+
+    };
+
+    return Point;
+
+}());
+yarn.Map = (function() {
 
     /**
      * Our core map options.
@@ -107,7 +139,7 @@ yarn.Map = function() {
         },
 
         /**
-         * Pan's tye map to the supplied lattitude/longitude.
+         * Pan's the map to the supplied lattitude/longitude.
          * @param  {yarn.LatLng} latlng     new map
          * @return {Object}                 *this*
          */
@@ -120,7 +152,7 @@ yarn.Map = function() {
 
     return Map;
 
-}();
+}());
 /**
  * Our projection name space.
  * @type {Object}
@@ -130,7 +162,7 @@ yarn.proj = {};
 /**
  * Our projection factory.
  */
-yarn.proj.Projection = function() {
+yarn.proj.Projection = (function() {
 
 	return {
 		get: function(name) {
@@ -144,7 +176,7 @@ yarn.proj.Projection = function() {
 		}
 	};
 
-}();
+}());
 
 /**
  * PROJCS["unnamed",
@@ -161,7 +193,7 @@ yarn.proj.Projection = function() {
  *  UNIT["Meter",1],
  *  EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs"]]
  */
-yarn.proj.SphericalMercator = function() {
+yarn.proj.SphericalMercator = (function() {
 
         /**
          * Contant for converting degrees to radians.
@@ -186,7 +218,7 @@ yarn.proj.SphericalMercator = function() {
          * Math.PI * EARTH_RADIUS_METERS or Math.log( ( Math.tan(85.05112878 * Math.PI/180) ) + 1 / Math.cos(85.05112878 * Math.PI/180) ) * EARTH_RADIUS_METERS)
          * @type {Number}
          */
-        EXTENTS             = { x: 20037508.34, y: 20037508.34 };
+        EXTENTS             = new yarn.Point(20037508.34, 20037508.34);
 
     /**
      * Empty constructor.
@@ -197,13 +229,29 @@ yarn.proj.SphericalMercator = function() {
 
         /**
          * Returns the resolution given the supplied zoom and tile size.
-         * @type {[type]}
+         * @type {Number}
          */
         getResolution: _.memoize(
             function(zoom, tileSize) {
                 return ( 2 * EXTENTS.x / (Math.pow(2, zoom) * tileSize) );
             }
         ),
+
+        getTransformer: function(zoom, tileSize) {
+            var resolution = this.getResolution(zoom, tileSize);
+
+            return {
+
+                forward: function(point) {
+                    return point.add(EXTENTS).divide(resolution);
+                },
+
+                reverse: function(point) {
+                    return point.multiply(resolution);
+                }
+
+            };
+        },
 
         /**
          * Given a lat/lng pair project it. The x and y values returned are equivalent to x/R and y/R, where R is the radius of the sphere of the Earth.
@@ -235,62 +283,49 @@ yarn.proj.SphericalMercator = function() {
     };
 
     return SphericalMercator;
-}();
+}());
 
 yarn.models = {};
 yarn.models.Viewport = Backbone.Model.extend({
-	
-	defaults: {
+    
+    defaults: {
 
-		/**
-		 * Projected top of the viewport
-		 * @type {Number}
-		 */
-		top: 0,
+        /**
+         * Projected top of the viewport
+         * @type {yarn.Point}
+         */
+        topLeft: null,
+        /**
+         * Projected right side of the viewport
+         * @type {yarn.Point}
+         */
+        bottomRight: null,
 
-		/**
-		 * Projected left side of the viewport
-		 * @type {Number}
-		 */
-		left: 0,
+        /**
+         * Trasformer for this viewport, from projected to pixel.
+         * @type {[type]}
+         */
+        transformer: null
 
-		/**
-		 * Projected right side of the viewport
-		 * @type {Number}
-		 */
-		right: 0,
+    },
 
-		/**
-		 * Projected bottom of the viewport
-		 * @type {Number}
-		 */
-		bottom: 0,
+    /**
+     * Returns the pixel coordinates of the top left.
+     * @return {yarn.Point} top left pixel coordinates
+     */
+    getTopLeft: function() {
+        var transform = this.get('transform');
+        return transform(this.get('topLeft'));
+    },
 
-		/**
-		 * Trasformer for this viewport, from projected to pixel.
-		 * @type {[type]}
-		 */
-		transformer: null
-
-	},
-
-	/**
-	 * Returns the pixel coordinates of the top left.
-	 * @return {yarn.Point} top left pixel coordinates
-	 */
-	getTopLeft: function() {
-		var transform = this.get('transform');
-		return transform(new yarn.Point(this.get('left'), this.get('top')));
-	},
-
-	/**
-	 * Returns the pixel coordinates of the bottom right.
-	 * @return {yarn.Point} bottom right pixel coordinates
-	 */
-	getBottomRight: function() {
-		var transform = this.get('transform');
-		return transform(new yarn.Point(this.get('right'), this.get('bottom')));
-	}
+    /**
+     * Returns the pixel coordinates of the bottom right.
+     * @return {yarn.Point} bottom right pixel coordinates
+     */
+    getBottomRight: function() {
+        var transform = this.get('transform');
+        return transform(this.get('bottomRight'));
+    }
 
 });
 /**
@@ -371,12 +406,36 @@ yarn.models.Viewport = Backbone.Model.extend({
             });
 
             self.on('change:center', function(model, center) {
-
+                this.updateViewport(model, center);
             });
         },
 
-        updateViewport: function(model, center) {
+        zoomIn: function() {
+            var zoom = this.get('zoom'),
+                maxZoom = this.get('maxZoom');
 
+            zoom += 1;
+
+            if (zoom < maxZoom) {
+                this.set({'zoom': zoom});
+            }
+        },
+
+        /**
+         * Updates the current viewport with the new bounds.
+         * @param  {Backbone.Model} model   map model
+         * @param  {yarn.LatLng}    center  new center latlng for the map
+         * @return {void}                   
+         */
+        updateViewport: function(model, center) {
+            var viewport = this.get('viewport'),
+                projectedCenter = this.project(center),
+                halfedCenter = this.getHalfDimensionsMercator(); 
+
+            viewport.set({
+                topLeft: new yarn.Point(projectedCenter.x - halfedCenter.x, projectedCenter.y + halfedCenter.y),
+                bottomRight: new yarn.Point(projectedCenter.x + halfedCenter.x, projectedCenter.y - halfedCenter.y)
+            });   
         },
 
         /**
@@ -387,91 +446,233 @@ yarn.models.Viewport = Backbone.Model.extend({
          */
         calculateViewport: function(model, zoom) {
             var center = model.get('center'),
-                proj = model.get('projection'),
-                tileSize = model.get('tileSize'), 
-                projCenter = proj.project(center),
-                resolution = proj.getResolution(zoom, tileSize),
-                centerX = model.get('width') / 2 * resolution,               
-                centerY = model.get('height') / 2 * resolution;
-
+                resolution = this.getResolution(model),
+                projectedCenter = this.project(center),
+                halfedCenter = this.getHalfDimensionsMercator(); 
+                
             return new yarn.models.Viewport({
-                top: projCenter.y + centerY,
-                left: projCenter.x - centerX,
-                right: projCenter.x + centerX,
-                bottom: projCenter.y - centerY,
+                topLeft: new yarn.Point(projectedCenter.x - halfedCenter.x, projectedCenter.y + halfedCenter.y),
+                bottomRight: new yarn.Point(projectedCenter.x + halfedCenter.x, projectedCenter.y - halfedCenter.y),
+
                 //- need i say, this is junk, a whole lot of junk
                 transform: function(point) {
-                    px = ( point.x + 20037508.34 ) / resolution,
-                    py = ( -point.y + 20037508.34 ) / resolution;
+                    var px = ( point.x + 20037508.34 ) / resolution,
+                        py = ( -point.y + 20037508.34 ) / resolution;
 
                     return new yarn.Point(px, py);
                 }
             });
+        },
+
+        moveByPixels: function(offset) {
+            var center = this.get('center'),
+                offsetProjected = this.reverse(offset),
+                centerProjected = this.project(center).subtract(offsetProjected);
+
+            this.set({ 'center': this.unproject(centerProjected) });
+        },
+
+        getProjection: function() {
+            return this.get('projection');
+        },
+
+        /**
+         * Returns the resolution for the state of the current model.
+         * @param  {Backbone.Model} model   *this*
+         * @return {Number}                 map resolution for the current map state
+         */
+        getResolution: function(model) {
+            var zoom = model.get('zoom'),
+                tileSize = model.get('tileSize'),
+                projection = model.get('projection');
+
+            return projection.getResolution(zoom, tileSize);
+        },
+
+        /**
+         * Returns the dimensions of this map halfed and scaled to projected values.
+         * @return {yarn.Point} 
+         */
+        getHalfDimensionsMercator: function() {
+            var projection = this.get('projection'),
+                transformer = projection.getTransformer(this.get('zoom'), this.get('tileSize')),
+                point = new yarn.Point(this.get('width'), this.get('height')).divide(2);
+
+            return transformer.reverse(point);
+        },
+
+        /**
+         * Returns the projected center for this model.
+         * @param  {Backbone.Model} model   a map model
+         * @param  {yarn.LatLng}    center  center latlng
+         * @return {yarn.Point}             projected point in mercator miles
+         */
+        project: function(latLng) {
+            var projection = this.get('projection');
+            return projection.project(latLng);
+        },
+
+        unproject: function(point) {
+            var projection = this.get('projection');
+            return projection.unproject(point);
+        },
+
+        transformLatLngToPixels: function(latLng) {
+            var projection = this.getProjection(),
+                transformer = projection.getTransformer(this.get('zoom'), this.get('tileSize')),
+                projected = projection.project(latLng);
+
+            return transformer.forward(projected);
+        },
+
+        /**
+         * Reverses a pixels into projected space.
+         * @param  {yarn.Point}     point   to reverse
+         * @return {yarn.Point}             point in projected space
+         */
+        reverse: function(point) {
+            var projection = this.get('projection'),
+                transformer = projection.getTransformer(this.get('zoom'), this.get('tileSize'));
+            return transformer.reverse(point);
         }
 
     });
 
-})();
+}());
+yarn.Clickable = (function() {
+  
+  return {
+
+    events: {
+      'dblclick': 'zoomIn'
+    },
+
+    zoomIn: function(evt) {
+      this.model.zoomIn();
+    }
+
+  };
+
+}());
+yarn.Draggable = (function() {
+  return {
+    events: {
+      'mousedown':  'dragStart',
+      'mouseup':    'dragStop',
+      'mousemove':  'drag'
+    },
+
+    dragStart: function(evt) {
+      this.dragging = true;
+      this.$el.css('cursor', 'move');
+      this.dragStartX = evt.pageX;
+      this.dragStartY = evt.pageY;
+    },
+
+    dragStop: function(evt) {
+      this.dragging = false;
+      this.$el.css('cursor', 'auto');
+    },
+
+    drag: function(evt) {
+      var currentPoint, delta;
+
+      if (this.dragging) {
+        delta = new yarn.Point(evt.pageX - this.dragStartX, this.dragStartY - evt.pageY);
+        this.model.moveByPixels(delta);
+        this.dragStartX = evt.pageX;
+        this.dragStartY = evt.pageY;
+      }
+    }
+  };
+}());
 yarn.views = {};
 (function() {
-	
-	/**
-	 * Our core view that represents the "slippy map". 
-	 * @type {Backbone.View}
-	 */
-	yarn.views.Map = Backbone.View.extend({
+    
+    /**
+     * Our core view that represents the "slippy map". 
+     * @type {Backbone.View}
+     */
+    yarn.views.Map = Backbone.View.extend({
 
-		/**
-		 * Our delegated events
-		 * @type {Object}
-		 */
-		events: {
-			'mousedown': 'dragStart',
-			'mousemove': 'drag',
-			'mouseup' : 'dragEnd'
-		},
+        mixins: [ yarn.Clickable, yarn.Draggable ],
 
-		/**
-		 * Initializer for the map.
-		 * @param  {Object} options Required is the el element.
-		 * @return {void}         
-		 */
-		initialize: function(options) {
-			this.layer = new yarn.views.TileLayer({ 
-				model: this.model
-			});
-		},
+        background: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKklEQVQokWO8du0aAzZw+fJlrOJMWEXxgFENxAAWXOGtq6tLHRtGNRADALj3CB2z8pZoAAAAAElFTkSuQmCC')",
 
-		/**
-		 * Renders the map and loads our tiles.
-		 * @return {yarn.view.Map} this instance of the map
-		 */
-		render: function() {
-			this.el.appendChild(this.layer.render().el);
-		},
+        /**
+         * Our delegated events
+         * @type {Object}
+         */
+        events: {},
 
-		dragStart: function(event) {
-			this.dragPoint = new yarn.Point(event.clientX, event.clientY);
-		},
+        /**
+         * Initializer for the map.
+         * @param  {Object} options Required is the el element.
+         * @return {void}         
+         */
+        initialize: function(options) {
+            var self = this;
 
-		dragEnd: function(event) {
-			this.dragPoint = null;
-		},
+            _.bindAll(self, 'update');            
+            
+            this.model.on("change:center", this.update);
+            this.model.on("change:zoom", this.update);
 
-		drag: function(event) {
-			if (!this.dragPoint) return;
+            this.layer = new yarn.views.TileLayer({ 
+                model: this.model
+            });
+        },
 
-			var prevPoint = this.dragPoint,
-				currPoint = new yarn.Point(event.clientX, event.clientY),
-				difference = currPoint.subtract(prevPoint),
-				pos = this.$el.offset();
+        /**
+         * Renders the map and loads our tiles.
+         * @return {yarn.view.Map} this instance of the map
+         */
+        render: function() {
+            var self = this,
+                layers = self.layers = $('<div style="position: absolute"></div>');
 
-			this.dragPoint = currPoint;
-		}
+            this.$el.css('background-image', this.background);
 
-	});
+            self.$el.append(layers);
+            layers.append(this.layer.render().el);
+        },
 
-})();
+        /**
+         * Updates the viewport.
+         * @return {void} 
+         */
+        update: function(model, center) {
+            var prev = model.previous('center'),
+                centerPixels = model.transformLatLngToPixels(center),
+                prevPixels = model.transformLatLngToPixels(prev),
+                delta = prevPixels.subtract(centerPixels);
+
+            this.move(delta);
+        },
+
+        /**
+         * Move the map by some offset.
+         * @param  {yarn.Point} offset x,y offsets in pixels to move the map
+         * @return {void}        
+         */
+        move: function(offset) {
+            var curr = this.layers.position();
+
+            this.layers.css('top', curr.top - offset.y);
+            this.layers.css('left', curr.left + offset.x);
+        },
+
+        /**
+         * Reset the map offsets.
+         * @return {void} 
+         */
+        reset: function() {
+            this.layers.css('top', 0);
+            this.layers.css('left', 0);
+        }
+    });
+
+}());
 (function() {
 
     /**
@@ -487,12 +688,17 @@ yarn.views = {};
          * @return {void}         
          */
         initialize: function(options) {
-            var self = this;
-            self.tiles = [];
+            var self = this,
+                model = self.model,
+                viewport = model.get('viewport');
 
-            _.bindAll(self, 'render');
+            self.tiles = {};
+            self.origin = viewport.getTopLeft();
 
-            self.model.on('change:viewport', self.render);
+            _.bindAll(self, 'render', '_reset', '_move');
+
+            self.model.on('change:center', self._move);
+            self.model.on('change:zoom', self._reset);            
         },
 
         /**
@@ -503,79 +709,166 @@ yarn.views = {};
             var model = this.model,
                 viewport = model.get('viewport');
 
+            this.$el.css('position', 'relative');
+           
             //- add our new tiles
-            this._addTiles(viewport);
+            this._tile(model);
 
             return this;
         },
 
         /**
-         * Calculates the top left position in pixel space of the center tile.
-         * @param  {yarn.models.Viewport}    viewport   our projectect center point
-         * @return {yarn.Point}                         top left pixel position of the center tile             
+         * Resets the tile container, by disposing of the current tiles and then re-tiles.
+         * @param  {Backbone.Model} Model   our model object
+         * @param  {Number}         zoom    new zoom value
+         * @return {void}       
          */
-        calculateTopLeft: function(viewport, tileSize) {
-            var topLeftPixelCoord = viewport.getTopLeft();
-            return new yarn.Point(
-                topLeftPixelCoord.x / tileSize,
-                topLeftPixelCoord.y / tileSize
-            );
+        _reset: function(model, zoom) {
+            var viewport = model.get('viewport');
+
+            _.invoke(this.tiles, 'dispose');
+
+            this.tiles = {};
+            this.origin = viewport.getTopLeft();
+
+            this._tile(model);
         },
 
         /**
-         * Adds our tiles our view element.
-         * @param {yarn.Point} centerPoint       
-         * @param {yarn.Point} centerTileTopLeft 
+         * Moves the tile layer.
+         * @param  {Backbone.Model} model   the map model
+         * @param  {yarn.Point}     center  map center in projected space
+         * @return {void}        
          */
-        _addTiles: function() {
-            var viewport = this.model.get('viewport'),
-                zoom = this.model.get('zoom'),
-                width = this.model.get('width'),
-                height = this.model.get('height'),
-                tileSize = this.model.get('tileSize'),
-                dimensions = this.model.get('dimensions'),
-                tileXY = this.calculateTopLeft(viewport, tileSize),
-                tileX = currX = Math.floor(tileXY.x),
-                tileY = Math.floor(tileXY.y),
-                left = currLeft = -1 * Math.floor( (tileXY.x - tileX) * tileSize ),
-                top = -1 * Math.floor( (tileXY.y - tileY) * tileSize ),
-                tile;
+        _move: function(model, center) {
+            this._tile(model);
+        },
 
-            while (top < dimensions.height) {
+        /**
+         * Places all of the tiles on the screen.
+         * @param  {Backbone.Model} model the map model.
+         * @return {void}       
+         */
+        _tile: function(model) {
+            var zoom = model.get('zoom'),
+                viewport = model.get('viewport'),
+                tileSize = model.get('tileSize'),
+                startXY = this._calculateTopLeft(),
+                startPos = startXY.multiply(tileSize),
+                boundsSE = viewport.getBottomRight(),
+                queue = [],
+                top, left, tileX, tileY, key, tile;
 
-                while (currLeft < dimensions.width) {
-                    tile = new yarn.views.Tile({
-                        src: "http://otile1.mqcdn.com/tiles/1.0.0/osm/" + zoom + "/" + currX + "/" + tileY + ".png",
-                        top: top,
-                        left: currLeft
-                    });
+            for (top = startPos.y, tileY = startXY.y; top <= boundsSE.y; top += tileSize, tileY += 1) {
+                for (left = startPos.x, tileX = startXY.x; left <= boundsSE.x; left += tileSize, tileX += 1) {
+                    key = zoom + "/" + tileX + "/" + tileY;
 
-                    this.$el.append(tile.render().el);
+                    if (!this.tiles[key]) {
+                        tile = this._createTile(key, this._getTileTopLeft(top, left));
+                        queue.push(tile);
 
-                    currX += 1;
-                    currLeft += tileSize;
+                        this.tiles[key] = tile;
+                    }
                 }
-
-                top += 256;
-                tileY += 1;
-
-                //- result our vars
-                currX = tileX;
-                currLeft = left;
             }
+            
+            this._addTiles(queue);
+        }, 
+
+        /**
+         * Adds the tiles to the container.
+         * @param {Array} queue array of tiles to add
+         */
+        _addTiles: function(queue) {
+            var tile;
+
+            while (tile = queue.pop()) {
+                this.$el.append(tile.render().el);
+            }
+        },    
+
+        /**
+         * Returns the top, left position relative to the origin.
+         * @param  {Backbone.Model}     model   our map model
+         * @param  {Number} top         top     position of the tile
+         * @param  {Left} left          left    most position of the tile
+         * @return {yarn.Point}         new point relative to the origin
+         */
+        _getTileTopLeft: function(top, left) {
+            var tileTopLeft = new yarn.Point(left, top);
+            return tileTopLeft.subtract(this.origin);
+        },
+
+
+        /*
+        _tile: function(model) {
+            var zoom = model.get('zoom'),
+                tileSize = model.get('tileSize'),
+                tileXY = this._calculateTopLeft(),
+                tileX = Math.floor(tileXY.x),
+                tileY = Math.floor(tileXY.y),
+                startTop = -Math.floor((tileXY.y - tileY) * tileSize),
+                startLeft = -Math.floor((tileXY.x - tileX) * tileSize),
+                dimensions = model.get('dimensions'),
+                height = dimensions.height,
+                width = dimensions.width,
+                tileContainer = this.$el.find('div:first-child'),
+                top, left, tile, key;
+
+            //- window.console.log(tileXY.floor().multiply(tileSize).subtract(model.get('viewport').getTopLeft()));
+
+            for (top = startTop; top < height; top += tileSize, tileY += 1) {
+
+                for (left = startLeft, tileX = Math.floor(tileXY.x); left < width; left += tileSize, tileX += 1) {
+                    key = zoom + "/" + tileX + "/" + tileY;
+
+                    if (!(tile = this.tiles[key])) {
+                        tile = this._createTile(key, top, left);
+                        this.tiles[key] = tile;
+                        tileContainer.append(tile.render().el);
+                    }
+                }
+            }
+        },
+
+        */
+        /**
+         * Private factory method for creating a new tile.
+         * @param  {path} path osm standard path to the tile image
+         * @param  {Number} top         y coordinate of the tile
+         * @param  {Number} left        x coordinate of the tile
+         * @return {yarn.views.Tile}    a new tile
+         */
+        _createTile: function(path, topLeft) {
+            return new yarn.views.Tile({
+                src: "http://otile1.mqcdn.com/tiles/1.0.0/osm/" + path + ".png",
+                topLeft: topLeft
+            });
+        },
+
+        /**
+         * Calculates the top left position in pixel space of the top left most tile.
+         * @return {yarn.Point} top left pixel position of the center tile             
+         */
+        _calculateTopLeft: function() {
+            var model = this.model,
+                viewport = model.get('viewport'),
+                tileSize = model.get('tileSize');
+
+            return viewport.getTopLeft().divide(tileSize).floor();
         }
+
     });
 
-})();
+}());
 (function() {
-
-    var IMG = function() {
+    var IMG = (function() {
         var imageEl = document.createElement('img');
         imageEl.style.position = 'absolute';
         imageEl.draggable = false;
 
         return imageEl;
-    }();
+    }());
 
     yarn.views.Tile = Backbone.View.extend({
 
@@ -586,8 +879,7 @@ yarn.views = {};
          */
         initialize: function(options) {
             this.src = options.src;
-            this.top = options.top;
-            this.left = options.left;
+            this.topLeft = options.topLeft;
         },
 
         /**
@@ -609,14 +901,20 @@ yarn.views = {};
         render: function() {
             var el = IMG.cloneNode(false);
             el.src = this.src;
-            el.style.top = this.top + 'px';
-            el.style.left = this.left + 'px';            
+            el.style.top = this.topLeft.y + 'px';
+            el.style.left = this.topLeft.x + 'px';            
 
             this.el = el;
 
             return this;
+        },
+
+        update: function(top, left) {
+            var el = this.el;
+            el.style.top = this.top + 'px';
+            el.style.left = this.left + 'px';
         }
 
     });
 
-})();
+}());

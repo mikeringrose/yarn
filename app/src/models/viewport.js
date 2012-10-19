@@ -4,27 +4,14 @@ yarn.models.Viewport = Backbone.Model.extend({
 
         /**
          * Projected top of the viewport
-         * @type {Number}
+         * @type {yarn.Point}
          */
-        top: 0,
-
-        /**
-         * Projected left side of the viewport
-         * @type {Number}
-         */
-        left: 0,
-
+        topLeft: null,
         /**
          * Projected right side of the viewport
-         * @type {Number}
+         * @type {yarn.Point}
          */
-        right: 0,
-
-        /**
-         * Projected bottom of the viewport
-         * @type {Number}
-         */
-        bottom: 0,
+        bottomRight: null,
 
         /**
          * Trasformer for this viewport, from projected to pixel.
@@ -40,7 +27,7 @@ yarn.models.Viewport = Backbone.Model.extend({
      */
     getTopLeft: function() {
         var transform = this.get('transform');
-        return transform(new yarn.Point(this.get('left'), this.get('top')));
+        return transform(this.get('topLeft'));
     },
 
     /**
@@ -49,7 +36,7 @@ yarn.models.Viewport = Backbone.Model.extend({
      */
     getBottomRight: function() {
         var transform = this.get('transform');
-        return transform(new yarn.Point(this.get('right'), this.get('bottom')));
+        return transform(this.get('bottomRight'));
     }
 
 });

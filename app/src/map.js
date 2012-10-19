@@ -65,7 +65,7 @@ yarn.Map = (function() {
         },
 
         /**
-         * Pan's tye map to the supplied lattitude/longitude.
+         * Pan's the map to the supplied lattitude/longitude.
          * @param  {yarn.LatLng} latlng     new map
          * @return {Object}                 *this*
          */

@@ -38,7 +38,7 @@ yarn.proj.SphericalMercator = (function() {
          * Math.PI * EARTH_RADIUS_METERS or Math.log( ( Math.tan(85.05112878 * Math.PI/180) ) + 1 / Math.cos(85.05112878 * Math.PI/180) ) * EARTH_RADIUS_METERS)
          * @type {Number}
          */
-        EXTENTS             = { x: 20037508.34, y: 20037508.34 };
+        EXTENTS             = new yarn.Point(20037508.34, 20037508.34);
 
     /**
      * Empty constructor.
@@ -49,13 +49,29 @@ yarn.proj.SphericalMercator = (function() {
 
         /**
          * Returns the resolution given the supplied zoom and tile size.
-         * @type {[type]}
+         * @type {Number}
          */
         getResolution: _.memoize(
             function(zoom, tileSize) {
                 return ( 2 * EXTENTS.x / (Math.pow(2, zoom) * tileSize) );
             }
         ),
+
+        getTransformer: function(zoom, tileSize) {
+            var resolution = this.getResolution(zoom, tileSize);
+
+            return {
+
+                forward: function(point) {
+                    return point.add(EXTENTS).divide(resolution);
+                },
+
+                reverse: function(point) {
+                    return point.multiply(resolution);
+                }
+
+            };
+        },
 
         /**
          * Given a lat/lng pair project it. The x and y values returned are equivalent to x/R and y/R, where R is the radius of the sphere of the Earth.
