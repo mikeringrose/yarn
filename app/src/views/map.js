@@ -24,10 +24,10 @@
         initialize: function(options) {
             var self = this;
 
-            _.bindAll(self, 'update');            
+            _.bindAll(self);            
             
             this.model.on("change:center", this.update);
-            this.model.on("change:zoom", this.update);
+            this.model.on("change:zoom", this.reset);
 
             this.layer = new yarn.views.TileLayer({ 
                 model: this.model

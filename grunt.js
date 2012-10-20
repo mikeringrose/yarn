@@ -29,7 +29,7 @@ module.exports = function(grunt) {
               'app/src/models/models.js',
               'app/src/models/viewport.js',
               'app/src/models/map.js',
-              'app/src/views/clickable.js',
+              'app/src/views/zoomable.js',
               'app/src/views/draggable.js',
               'app/src/views/views.js',
               'app/src/views/map.js',

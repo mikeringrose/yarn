@@ -1,4 +1,4 @@
-/*! PROJECT_NAME - v0.1.0 - 2012-10-17
+/*! PROJECT_NAME - v0.1.0 - 2012-10-20
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2012 Mike Ringrose; Licensed MIT */
 
@@ -613,10 +613,10 @@ yarn.views = {};
         initialize: function(options) {
             var self = this;
 
-            _.bindAll(self, 'update');            
+            _.bindAll(self);            
             
             this.model.on("change:center", this.update);
-            this.model.on("change:zoom", this.update);
+            this.model.on("change:zoom", this.reset);
 
             this.layer = new yarn.views.TileLayer({ 
                 model: this.model
