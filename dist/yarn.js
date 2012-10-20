@@ -421,6 +421,17 @@ yarn.models.Viewport = Backbone.Model.extend({
             }
         },
 
+        zoomOut: function() {
+            var zoom = this.get('zoom'),
+                minZoom = this.get('minZoom');
+
+            zoom -= 1;
+
+            if (zoom > minZoom) {
+                this.set({'zoom': zoom});
+            }
+        },        
+
         /**
          * Updates the current viewport with the new bounds.
          * @param  {Backbone.Model} model   map model
@@ -544,13 +555,29 @@ yarn.Clickable = (function() {
   return {
 
     events: {
-      'dblclick': 'zoomIn'
+      'dblclick':   'zoomIn',
+      'mousewheel': 'handleMouseWheel'
     },
 
     zoomIn: function(evt) {
       this.model.zoomIn();
-    }
+    },
 
+    zoomOut: function(evt) {
+      this.model.zoomIn();
+    },    
+
+    handleMouseWheel: _.throttle(
+      function(evt) {
+        var oe = evt.originalEvent,
+            delta = oe.wheelDelta;
+        if (delta > 0) {
+          this.model.zoomIn();
+        }
+        else {
+          this.model.zoomOut();
+        }
+      }, 400)
   };
 
 }());
