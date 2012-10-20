@@ -6,7 +6,7 @@
      */
     yarn.views.Map = Backbone.View.extend({
 
-        mixins: [ yarn.Clickable, yarn.Draggable ],
+        mixins: [ yarn.Zoomable, yarn.Draggable ],
 
         background: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKklEQVQokWO8du0aAzZw+fJlrOJMWEXxgFENxAAWXOGtq6tLHRtGNRADALj3CB2z8pZoAAAAAElFTkSuQmCC')",
 
