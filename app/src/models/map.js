@@ -91,6 +91,17 @@
             }
         },
 
+        zoomOut: function() {
+            var zoom = this.get('zoom'),
+                minZoom = this.get('minZoom');
+
+            zoom -= 1;
+
+            if (zoom > minZoom) {
+                this.set({'zoom': zoom});
+            }
+        },        
+
         /**
          * Updates the current viewport with the new bounds.
          * @param  {Backbone.Model} model   map model
