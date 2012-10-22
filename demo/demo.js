@@ -10,8 +10,6 @@ document.addEventListener("DOMContentLoaded", function() {
             tileSize: 256
         },
         map = new yarn.Map(options);
-
-        setTimeout(function() { 
-            map.setZoom(8); 
-        }, 1500);
+        
+        map.addMarker({ latLng: new yarn.LatLng(lat, lng) });
 });
