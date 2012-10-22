@@ -48,6 +48,10 @@ yarn.Point = (function() {
 
         floor: function() {
             return new Point(Math.floor(this.x), Math.floor(this.y));
+        },
+
+        ceil: function() {
+            return new Point(Math.ceil(this.x), Math.ceil(this.y));
         }
 
     };

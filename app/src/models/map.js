@@ -56,8 +56,9 @@
              * The current view port.
              * @type {yarn.models.Viewport}
              */
-            viewport: null
+            viewport: null,
 
+            features: null
         },
 
         /**
@@ -68,6 +69,7 @@
         initialize: function(options) {
             var self = this;
 
+            self.set({ 'features': new yarn.models.Features() });
             self.set({ 'viewport': self.calculateViewport(self, self.get('zoom') ) } );
 
             //- when our zoom is updated, make sure to update the viewport
@@ -100,7 +102,7 @@
             if (zoom > minZoom) {
                 this.set({'zoom': zoom});
             }
-        },        
+        },
 
         /**
          * Updates the current viewport with the new bounds.

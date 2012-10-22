@@ -27,14 +27,18 @@ module.exports = function(grunt) {
               'app/src/proj/projection.js', 
               'app/src/proj/sphericalmercator.js',
               'app/src/models/models.js',
+              'app/src/models/features.js',              
               'app/src/models/viewport.js',
               'app/src/models/map.js',
+              'app/src/models/marker.js',
               'app/src/views/zoomable.js',
               'app/src/views/draggable.js',
               'app/src/views/views.js',
               'app/src/views/map.js',
               'app/src/views/tilelayer.js',
-              'app/src/views/tile.js'
+              'app/src/views/tile.js',
+              'app/src/views/features_layer.js',
+              'app/src/views/marker.js'
             ],
         dest: 'dist/yarn.js'
       }

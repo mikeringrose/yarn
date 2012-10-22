@@ -1,4 +1,4 @@
-/*! PROJECT_NAME - v0.1.0 - 2012-10-20
+/*! PROJECT_NAME - v0.1.0 - 2012-10-21
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2012 Mike Ringrose; Licensed MIT */
 
@@ -65,6 +65,10 @@ yarn.Point = (function() {
 
         floor: function() {
             return new Point(Math.floor(this.x), Math.floor(this.y));
+        },
+
+        ceil: function() {
+            return new Point(Math.ceil(this.x), Math.ceil(this.y));
         }
 
     };
@@ -146,7 +150,12 @@ yarn.Map = (function() {
         setCenter: function(latlng) {
             this.model.set({'center':latlng});
             return this;
-        }
+        },
+
+        addMarker: function(attributes) {
+            var marker = new yarn.models.Marker(attributes);
+            this.model.get('features').add(marker);
+        }        
 
     };
 
@@ -243,7 +252,7 @@ yarn.proj.SphericalMercator = (function() {
             return {
 
                 forward: function(point) {
-                    return point.add(EXTENTS).divide(resolution);
+                    return new yarn.Point(point.x + EXTENTS.x, -point.y + EXTENTS.y).divide(resolution);
                 },
 
                 reverse: function(point) {
@@ -286,6 +295,9 @@ yarn.proj.SphericalMercator = (function() {
 }());
 
 yarn.models = {};
+yarn.models.Features = Backbone.Collection.extend({
+  model: yarn.models.Marker
+});
 yarn.models.Viewport = Backbone.Model.extend({
     
     defaults: {
@@ -386,8 +398,9 @@ yarn.models.Viewport = Backbone.Model.extend({
              * The current view port.
              * @type {yarn.models.Viewport}
              */
-            viewport: null
+            viewport: null,
 
+            features: null
         },
 
         /**
@@ -398,6 +411,7 @@ yarn.models.Viewport = Backbone.Model.extend({
         initialize: function(options) {
             var self = this;
 
+            self.set({ 'features': new yarn.models.Features() });
             self.set({ 'viewport': self.calculateViewport(self, self.get('zoom') ) } );
 
             //- when our zoom is updated, make sure to update the viewport
@@ -430,7 +444,7 @@ yarn.models.Viewport = Backbone.Model.extend({
             if (zoom > minZoom) {
                 this.set({'zoom': zoom});
             }
-        },        
+        },
 
         /**
          * Updates the current viewport with the new bounds.
@@ -550,7 +564,20 @@ yarn.models.Viewport = Backbone.Model.extend({
     });
 
 }());
-yarn.Clickable = (function() {
+yarn.models.Marker = Backbone.Model.extend({
+
+  defaults: {
+
+    latLng: null,
+
+    icon: null,
+
+    popup: null
+
+  }
+
+});
+yarn.Zoomable = (function() {
   
   return {
 
@@ -622,7 +649,7 @@ yarn.views = {};
      */
     yarn.views.Map = Backbone.View.extend({
 
-        mixins: [ yarn.Clickable, yarn.Draggable ],
+        mixins: [ yarn.Zoomable, yarn.Draggable ],
 
         background: "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAKklEQVQokWO8du0aAzZw+fJlrOJMWEXxgFENxAAWXOGtq6tLHRtGNRADALj3CB2z8pZoAAAAAElFTkSuQmCC')",
 
@@ -648,6 +675,11 @@ yarn.views = {};
             this.layer = new yarn.views.TileLayer({ 
                 model: this.model
             });
+
+            this.featuresLayer = new yarn.views.FeaturesLayer({
+                model: this.model,
+                collection: this.model.get('features')
+            });
         },
 
         /**
@@ -662,6 +694,7 @@ yarn.views = {};
 
             self.$el.append(layers);
             layers.append(this.layer.render().el);
+            layers.append(this.featuresLayer.render().el);
         },
 
         /**
@@ -685,7 +718,7 @@ yarn.views = {};
         move: function(offset) {
             var curr = this.layers.position();
 
-            this.layers.css('top', curr.top - offset.y);
+            this.layers.css('top', curr.top + offset.y);
             this.layers.css('left', curr.left + offset.x);
         },
 
@@ -945,3 +978,61 @@ yarn.views = {};
     });
 
 }());
+yarn.views.FeaturesLayer = Backbone.View.extend({
+
+  attributes: {
+    'style': 'position: relative' 
+  },
+
+  initialize: function() {
+    var model = this.model,
+        viewport = model.get('viewport');
+
+    _.bindAll(this);
+    this.origin = viewport.getTopLeft();
+    this.collection.on('add', this.addMarker);
+  },
+
+  render: function() {
+    return this;
+  },
+
+  addMarker: function(marker) {
+    var pos = this.getMarkerPosition(marker),
+        markerView = new yarn.views.Marker({ model: marker, pos: pos});
+
+    this.$el.append(markerView.render().el);
+  },
+
+  getMarkerPosition: function(marker) {
+    var model = this.model,
+        viewport = model.get('viewport'),
+        latLng = marker.get('latLng'),
+        pixelPos = model.transformLatLngToPixels(latLng);
+
+    return pixelPos.subtract(this.origin).floor();
+  }
+
+});
+yarn.views.Marker = Backbone.View.extend({
+
+  className: "css marker",
+  
+  events: {
+    'click': 'handleClick'
+  },
+
+  render: function() {
+    var pos = this.options.pos;
+
+    this.$el.css('top', (pos.y - 18) + 'px');
+    this.$el.css('left', (pos.x - 12)+ 'px');
+
+    return this;
+  },
+
+  handleClick: function() {
+    window.alert('boom');
+  }
+
+});

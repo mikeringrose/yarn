@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>Example Map</title>
+    <link rel="stylesheet" type="text/css" href="app/stylesheets/yarn.css">
     <style type="text/css">
         #map {
             position: relative;
@@ -31,6 +32,8 @@
                     tileSize: 256
                 },
                 map = new yarn.Map(options);
+
+                map.addMarker({ latLng: new yarn.LatLng(lat, lng) });
 
                 // setTimeout(function() { map.setZoom(8); }, 1500);
                 // setInterval(function() { lng += .05; map.setCenter(new yarn.LatLng(lat, lng)); }, 3000);

@@ -63,7 +63,7 @@ yarn.proj.SphericalMercator = (function() {
             return {
 
                 forward: function(point) {
-                    return point.add(EXTENTS).divide(resolution);
+                    return new yarn.Point(point.x + EXTENTS.x, -point.y + EXTENTS.y).divide(resolution);
                 },
 
                 reverse: function(point) {

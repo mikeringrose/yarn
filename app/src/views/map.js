@@ -32,6 +32,11 @@
             this.layer = new yarn.views.TileLayer({ 
                 model: this.model
             });
+
+            this.featuresLayer = new yarn.views.FeaturesLayer({
+                model: this.model,
+                collection: this.model.get('features')
+            });
         },
 
         /**
@@ -46,6 +51,7 @@
 
             self.$el.append(layers);
             layers.append(this.layer.render().el);
+            layers.append(this.featuresLayer.render().el);
         },
 
         /**
@@ -69,7 +75,7 @@
         move: function(offset) {
             var curr = this.layers.position();
 
-            this.layers.css('top', curr.top - offset.y);
+            this.layers.css('top', curr.top + offset.y);
             this.layers.css('left', curr.left + offset.x);
         },
 

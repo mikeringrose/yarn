@@ -72,7 +72,12 @@ yarn.Map = (function() {
         setCenter: function(latlng) {
             this.model.set({'center':latlng});
             return this;
-        }
+        },
+
+        addMarker: function(attributes) {
+            var marker = new yarn.models.Marker(attributes);
+            this.model.get('features').add(marker);
+        }        
 
     };
 
