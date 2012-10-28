@@ -10,7 +10,9 @@ yarn.Map = (function() {
     function Map(options) {
         var width = options.el.clientWidth,
             height = options.el.clientHeight,
-            projection = y.proj.Projection.get(options.projection || 'spherical mercator');
+            projection = y.proj.Projection.get(options.projection || 'spherical mercator'),
+            defaultCollection = new yarn.models.FeatureCollection({id: "default-feature-collection"}),
+            featureCollections = new yarn.models.FeatureCollections();
 
         this.model = new yarn.models.Map({
             tileSize: options.tileSize,
@@ -18,6 +20,7 @@ yarn.Map = (function() {
             center: options.center,
             projection: projection,
             dimensions: { width: width, height: height },
+            featureCollections: featureCollections,
             width: width,
             height: height
         });
@@ -26,6 +29,8 @@ yarn.Map = (function() {
             el: options.el,
             model: this.model
         });
+
+        featureCollections.add(defaultCollection);
 
         this.view.render();
     }
@@ -75,8 +80,11 @@ yarn.Map = (function() {
         },
 
         addMarker: function(attributes) {
-            var marker = new yarn.models.Marker(attributes);
-            this.model.get('features').add(marker);
+            var marker = new yarn.models.Marker(attributes),
+                collections = this.model.get('featureCollections'),
+                defaultCollection = collections.get('default-feature-collection');
+
+            defaultCollection.get('features').add(marker);
         }        
 
     };
