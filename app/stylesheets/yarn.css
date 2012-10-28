@@ -1,5 +1,5 @@
 .marker {
-    position: relative;
+    position: absolute;
 }
 
 .css.marker {
@@ -12,6 +12,7 @@
 
 .css.marker:before {
     box-sizing: border-box;
+    -moz-box-sizing: border-box;
     content: '';
     
     display: block;
