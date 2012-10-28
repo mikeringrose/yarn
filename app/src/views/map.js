@@ -35,7 +35,7 @@
 
             this.featuresLayer = new yarn.views.FeaturesLayer({
                 model: this.model,
-                collection: this.model.get('features')
+                collection: this.model.get('featureCollections')
             });
         },
 

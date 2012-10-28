@@ -1,4 +1,4 @@
-/*! PROJECT_NAME - v0.1.0 - 2012-10-21
+/*! PROJECT_NAME - v0.1.0 - 2012-10-28
 * http://PROJECT_WEBSITE/
 * Copyright (c) 2012 Mike Ringrose; Licensed MIT */
 
@@ -88,7 +88,9 @@ yarn.Map = (function() {
     function Map(options) {
         var width = options.el.clientWidth,
             height = options.el.clientHeight,
-            projection = y.proj.Projection.get(options.projection || 'spherical mercator');
+            projection = y.proj.Projection.get(options.projection || 'spherical mercator'),
+            defaultCollection = new yarn.models.FeatureCollection({id: "default-feature-collection"}),
+            featureCollections = new yarn.models.FeatureCollections();
 
         this.model = new yarn.models.Map({
             tileSize: options.tileSize,
@@ -96,6 +98,7 @@ yarn.Map = (function() {
             center: options.center,
             projection: projection,
             dimensions: { width: width, height: height },
+            featureCollections: featureCollections,
             width: width,
             height: height
         });
@@ -104,6 +107,8 @@ yarn.Map = (function() {
             el: options.el,
             model: this.model
         });
+
+        featureCollections.add(defaultCollection);
 
         this.view.render();
     }
@@ -153,8 +158,11 @@ yarn.Map = (function() {
         },
 
         addMarker: function(attributes) {
-            var marker = new yarn.models.Marker(attributes);
-            this.model.get('features').add(marker);
+            var marker = new yarn.models.Marker(attributes),
+                collections = this.model.get('featureCollections'),
+                defaultCollection = collections.get('default-feature-collection');
+
+            defaultCollection.get('features').add(marker);
         }        
 
     };
@@ -295,8 +303,41 @@ yarn.proj.SphericalMercator = (function() {
 }());
 
 yarn.models = {};
+yarn.models.Feature = Backbone.Model.extend({
+  
+});
 yarn.models.Features = Backbone.Collection.extend({
-  model: yarn.models.Marker
+  model: yarn.models.Feature
+});
+yarn.models.FeatureCollection = Backbone.Model.extend({
+
+  defaults: {
+    /**
+     * Name of this feature
+     * @type {String}
+     */
+    id: null,
+
+    /**
+     * Whether or not this feature is visible.
+     * @type {Boolean}
+     */
+    visible: true,
+
+    /**
+     * The features of this collection.
+     * @type {Backbone.Collection}
+     */
+    features: null
+  },
+
+  initialize: function() {
+    this.set({features: new yarn.models.Features()});
+  }
+
+});
+yarn.models.FeatureCollections = Backbone.Collection.extend({
+  model: yarn.models.FeatureCollection
 });
 yarn.models.Viewport = Backbone.Model.extend({
     
@@ -410,8 +451,7 @@ yarn.models.Viewport = Backbone.Model.extend({
          */
         initialize: function(options) {
             var self = this;
-
-            self.set({ 'features': new yarn.models.Features() });
+            
             self.set({ 'viewport': self.calculateViewport(self, self.get('zoom') ) } );
 
             //- when our zoom is updated, make sure to update the viewport
@@ -564,19 +604,7 @@ yarn.models.Viewport = Backbone.Model.extend({
     });
 
 }());
-yarn.models.Marker = Backbone.Model.extend({
-
-  defaults: {
-
-    latLng: null,
-
-    icon: null,
-
-    popup: null
-
-  }
-
-});
+yarn.models.Marker = yarn.models.Feature.extend({});
 yarn.Zoomable = (function() {
   
   return {
@@ -678,7 +706,7 @@ yarn.views = {};
 
             this.featuresLayer = new yarn.views.FeaturesLayer({
                 model: this.model,
-                collection: this.model.get('features')
+                collection: this.model.get('featureCollections')
             });
         },
 
@@ -986,22 +1014,36 @@ yarn.views.FeaturesLayer = Backbone.View.extend({
 
   initialize: function() {
     var model = this.model,
+        collection = this.collection,
         viewport = model.get('viewport');
 
     _.bindAll(this);
+
     this.origin = viewport.getTopLeft();
-    this.collection.on('add', this.addMarker);
+
+    model.on('change:zoom', this.reset);
+    collection.on('add', this.onNewFeatureCollection);
   },
 
   render: function() {
     return this;
   },
 
-  addMarker: function(marker) {
-    var pos = this.getMarkerPosition(marker),
-        markerView = new yarn.views.Marker({ model: marker, pos: pos});
+  onNewFeatureCollection: function(featureCollection) {
+    var features = featureCollection.get('features');
+    features.on('add', this.addFeature);
+    features.on('remove', this.removeFeature);
+  },
+
+  addFeature: function(feature) {
+    var pos = this.getMarkerPosition(feature),
+        markerView = new yarn.views.Marker({ model: feature, pos: pos});
 
     this.$el.append(markerView.render().el);
+  },
+
+  removeFeature: function(feature) {
+
   },
 
   getMarkerPosition: function(marker) {
@@ -1010,7 +1052,25 @@ yarn.views.FeaturesLayer = Backbone.View.extend({
         latLng = marker.get('latLng'),
         pixelPos = model.transformLatLngToPixels(latLng);
 
-    return pixelPos.subtract(this.origin).floor();
+    return pixelPos.subtract(this.origin);
+  },
+
+  reset: function(model) {
+    var self = this,
+        viewport = model.get('viewport'),
+        features;
+
+    this.$el.empty();
+
+    this.origin = viewport.getTopLeft();
+
+    this.collection.each(function(featureCollection) {
+      features = featureCollection.get('features');
+
+      features.each(function(feature) {
+        self.addFeature(feature);
+      });
+    });
   }
 
 });

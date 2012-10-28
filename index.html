@@ -33,8 +33,9 @@
                 },
                 map = new yarn.Map(options);
 
+                map.addMarker({ latLng: new yarn.LatLng(lat + .01, lng + .05) });
                 map.addMarker({ latLng: new yarn.LatLng(lat, lng) });
-
+                
                 // setTimeout(function() { map.setZoom(8); }, 1500);
                 // setInterval(function() { lng += .05; map.setCenter(new yarn.LatLng(lat, lng)); }, 3000);
         });
