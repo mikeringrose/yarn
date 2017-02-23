@@ -1,3 +1,4 @@
+ /*
 ---
  name: The Name of the Demo
  description: Some description, please keep it in one line
@@ -5,3 +6,6 @@
    - Mike Ringrose
  normalize_css: no
  ---
+ */
+ 
+<p>Just a stupid map demo.</p> 
